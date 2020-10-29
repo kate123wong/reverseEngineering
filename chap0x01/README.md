@@ -425,11 +425,11 @@ int main(int argc, char** argv)
 
 ![image-20201022150421075](images/image-20201022150421075.png)
 
-### （5）(选做，难度较大)修改shellcode功能为下载执行器，即下下载一个可执行文件，然后再运行（提示，使用原生API UrlDownloadToFile
+### （5）(选做，难度较大)修改shellcode功能为下载执行器，即下载一个可执行文件，然后再运行（提示，使用原生API UrlDownloadToFile
 
 >补充知识点：
 >
->**shellcode最重要的方式是获得函数地址，有两种方式；用GetProcAddress函数获取函数地址，或者用或者CreateProcess(或WinExec())遍历导出表。**
+>**shellcode最重要的方式是获得函数地址，有两种方式；用GetProcAddress函数获取函数地址，或者用CreateProcess(或WinExec())遍历导出表。**
 >
 >+ 生成main.exe时的源文件最好用c而不是cpp的原因：
 >  + c++底层是对象的思想，c的底层是地址的思想。所以：当漏洞利用到强制类型转换，最好使用c。
