@@ -456,7 +456,7 @@ int main(int argc, char** argv)
   typedef HRESULT(WINAPI* MY)(LPUNKNOWN, LPCSTR, LPCSTR, DWORD, LPBINDSTATUSCALLBACK);
   
   int main() {
-  	HMODULE hurlmod = LoadLibrary("urlmon.dll");
+  	HMODULE hurlmod = LoadLibrary(L"urlmon.dll");
   	MY function_ptr = (MY)GetProcAddress(hurlmod, "URLDownloadToFileA");
   	function_ptr(
   		NULL,
