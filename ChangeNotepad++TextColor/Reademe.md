@@ -36,7 +36,7 @@ dumpbin /imports .\notepad++.exe > D:\notepad_imports.txt
 
 依次对三个与图像相关的函数进行查阅文档:
 
-+ [SetTextColor](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-settextcolor)：SetTextColor是对 [TextOut](https://docs.microsoft.com/en-us/windows/desktop/api/wingdi/nf-wingdi-textouta) and [ExtTextOut](https://docs.microsoft.com/en-us/windows/desktop/api/wingdi/nf-wingdi-exttextouta) 两个函数所写的字符进行渲染！！（需要验证notepad++页面渲染的时候是否是由这个函数）
++ [SetTextColor](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-settextcolor)：SetTextColor是对 [TextOut](https://docs.microsoft.com/en-us/windows/desktop/api/wingdi/nf-wingdi-textouta) and [ExtTextOut](https://docs.microsoft.com/en-us/windows/desktop/api/wingdi/nf-wingdi-exttextouta) 两个函数所写的字符进行渲染。
 
 ```
 COLORREF SetTextColor(
@@ -45,7 +45,7 @@ COLORREF SetTextColor(
 );
 ```
 
-+ [GetSysColorBrush](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getsyscolorbrush) ：检索指定颜色对应的全局逻辑刷的句柄
++ [GetSysColorBrush](https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getsyscolorbrush) ：检索指定颜色对应的全局逻辑刷的句柄。
 
 ```
 HBRUSH GetSysColorBrush(
@@ -61,11 +61,11 @@ DWORD GetSysColor(
 );
 ```
 
-### 第二步：使用`Windebug`实现实现篡改notepad++字体颜色的实验
+### 第二步：使用`Windebug`实现篡改notepad++字体颜色的实验
 
-1、学习`Windebug`相关内容，见附1。
+1、学习`Windebug`相关内容，见【附录1】。
 
-2、对函数`SetTextColor`下断点调试，看是否可以改变字体颜色。
+2、对函数`SetTextColor`下断点调试，观察是否可以改变字体颜色。
 
 + 所使用的命令：
 
@@ -103,7 +103,7 @@ DWORD GetSysColor(
 
 #### 相关知识学习 
 
-+ `dll`相关知识：见附录2【`Dll`文件】。
++ `dll`相关知识：见附录2【 `Dll`动态库文件】。
 
 + API HOOK 和 IAT HOOK 的基本原理：见附录3【从PE文件理解何为IAT hook】。
   + API HOOK:通过`api hook`，改变一个系统`api`的原有功能。基本的方法就是通过`hook`“接触”到需要修改的`api`函数[入口点](https://baike.baidu.com/item/入口点)，改变它的地址指向新的自定义的函数。
@@ -116,7 +116,7 @@ DWORD GetSysColor(
 
 #### C++实现
 
-+ [代码](./ChangeNotepadPlusPlusTextColor)
++ [代码链接](./ChangeNotepadPlusPlusTextColor)
 
   + [dllmain.cpp](./ChangeNotepadPlusPlusTextColor/dllmain/dllmain.cpp)
 
@@ -156,7 +156,13 @@ DWORD GetSysColor(
   >在`C:\Users\18810\source\repos\ChangeNotepadPlusPlusTextColor\x64\Debug\`[即`injectAllTheThings.exe`的所在路径]中打开`cmd`,执行以下命令，进行`dll`注入：
   >`.\injectAllTheThings.exe -t  1 notepad++.exe C:\Users\18810\source\repos\ChangeNotepadPlusPlusTextColor\x64\Debug\dllmain.dll`
 
-+ 效果图：
++ 实验效果：
+
+  + 开启notepad++.exe,使用`WinDbg`下检测软件行为，使之暂停，然后调用`injectAllTheThings.exe`进行注入，在`WinDbg`中写入`g`命令使`notepad++.exe`软件继续执行。可以观察到加载了上述所生成的`dllmain.dll`文件，并弹出了一个`IAT hooking`的弹框（这算因为为方便观察现象，在`dllmain.dll`文件中调用了`MessageBoxA`函数来生成弹窗）。
+
+    ![image-20210111192148575](images/image-20210111192148575.png)
+
+  
 
 ## 附录
 
@@ -329,9 +335,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 }
 ```
 
+## 参考文献
 
-
- 
-
-
-
+注：已在文中所用到的地方以链接方式给出。
