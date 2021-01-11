@@ -1,0 +1,51 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ChangeNotepadPlusPlusTextColor", "ChangeNotepadPlusPlusTextColor\ChangeNotepadPlusPlusTextColor.vcxproj", "{627969B1-5403-4D53-8D9A-BFE324C2FBB6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dllmain", "dllmain\dllmain.vcxproj", "{F71F1833-BF9A-45DC-8519-8A06E620B0FA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "injectAllTheThings", "injectAllTheThings\injectAllTheThings.vcxproj", "{57930B58-FE07-422A-BA81-636AAE3525B6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{627969B1-5403-4D53-8D9A-BFE324C2FBB6}.Debug|x64.ActiveCfg = Debug|x64
+		{627969B1-5403-4D53-8D9A-BFE324C2FBB6}.Debug|x64.Build.0 = Debug|x64
+		{627969B1-5403-4D53-8D9A-BFE324C2FBB6}.Debug|x86.ActiveCfg = Debug|Win32
+		{627969B1-5403-4D53-8D9A-BFE324C2FBB6}.Debug|x86.Build.0 = Debug|Win32
+		{627969B1-5403-4D53-8D9A-BFE324C2FBB6}.Release|x64.ActiveCfg = Release|x64
+		{627969B1-5403-4D53-8D9A-BFE324C2FBB6}.Release|x64.Build.0 = Release|x64
+		{627969B1-5403-4D53-8D9A-BFE324C2FBB6}.Release|x86.ActiveCfg = Release|Win32
+		{627969B1-5403-4D53-8D9A-BFE324C2FBB6}.Release|x86.Build.0 = Release|Win32
+		{F71F1833-BF9A-45DC-8519-8A06E620B0FA}.Debug|x64.ActiveCfg = Debug|x64
+		{F71F1833-BF9A-45DC-8519-8A06E620B0FA}.Debug|x64.Build.0 = Debug|x64
+		{F71F1833-BF9A-45DC-8519-8A06E620B0FA}.Debug|x86.ActiveCfg = Debug|Win32
+		{F71F1833-BF9A-45DC-8519-8A06E620B0FA}.Debug|x86.Build.0 = Debug|Win32
+		{F71F1833-BF9A-45DC-8519-8A06E620B0FA}.Release|x64.ActiveCfg = Release|x64
+		{F71F1833-BF9A-45DC-8519-8A06E620B0FA}.Release|x64.Build.0 = Release|x64
+		{F71F1833-BF9A-45DC-8519-8A06E620B0FA}.Release|x86.ActiveCfg = Release|Win32
+		{F71F1833-BF9A-45DC-8519-8A06E620B0FA}.Release|x86.Build.0 = Release|Win32
+		{57930B58-FE07-422A-BA81-636AAE3525B6}.Debug|x64.ActiveCfg = Debug|x64
+		{57930B58-FE07-422A-BA81-636AAE3525B6}.Debug|x64.Build.0 = Debug|x64
+		{57930B58-FE07-422A-BA81-636AAE3525B6}.Debug|x86.ActiveCfg = Debug|Win32
+		{57930B58-FE07-422A-BA81-636AAE3525B6}.Debug|x86.Build.0 = Debug|Win32
+		{57930B58-FE07-422A-BA81-636AAE3525B6}.Release|x64.ActiveCfg = Release|x64
+		{57930B58-FE07-422A-BA81-636AAE3525B6}.Release|x64.Build.0 = Release|x64
+		{57930B58-FE07-422A-BA81-636AAE3525B6}.Release|x86.ActiveCfg = Release|Win32
+		{57930B58-FE07-422A-BA81-636AAE3525B6}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A30FC0A6-2175-45C0-94FD-19A0FFEFB02B}
+	EndGlobalSection
+EndGlobal

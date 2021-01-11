@@ -89,7 +89,7 @@ DWORD GetSysColor(
   + `mov qword ptr [rsp+8],rbx` : 该命令的意思是将寄存器`rbx`里面的值写入`rsp+8`。（其原因是：[在 Win64 下，会为每个参数保留一份用来传递的 stack 空间，以便**回写** caller 的 stack](https://blog.csdn.net/a1875566250/article/details/11619637)）
   + 最后采用`r`指令代替`eb`指令。
 
-### 第三步： 基于`dll`、`API hook`实现篡改notepad++字体颜色的实验
+### 第三步： 基于`dll`、`IAT hook`实现篡改notepad++字体颜色的实验
 
 #### 参考资料
 
@@ -99,15 +99,64 @@ DWORD GetSysColor(
 + `dll` 注入相关参考代码链接：
   + `https://github.com/DarthTon/Xenos`
   + `https://github.com/fdiskyou/injectAllTheThings`
-+ `apihook`：
++ `apihook`
 
 #### 相关知识学习 
 
-+ `dll`相关知识：见附录2。
++ `dll`相关知识：见附录2【`Dll`文件】。
 
-+ API HOOK 和 IAT HOOK 的基本原理。 
++ API HOOK 和 IAT HOOK 的基本原理：见附录3【从PE文件理解何为IAT hook】。
   + API HOOK:通过`api hook`，改变一个系统`api`的原有功能。基本的方法就是通过`hook`“接触”到需要修改的`api`函数[入口点](https://baike.baidu.com/item/入口点)，改变它的地址指向新的自定义的函数。
   + IAT HOOK: *IAT* 法就是通过修改 *IAT* 表中的函数地址而达到的 *API* 截获的方法。
+
+#### 基本思想
+
++ `dll`注入：`injectAllTheThings.exe` 接受参数，并根据参数执行，该命令的意思是创建一个线程，将该线程注入到`notepad++.exe`中，该线程加载`dllmain.dll`动态库,并在该线程attach/detach到进程的时候执行一些自定义代码。
++ `IAThook` : 在`dllmain.dll`中的入口函数 `DllMain`中定义线程attach到notepad++.exe的时候改变`notepad++.exe`PE文件的的`IAT`表中指向`SetTextColor`的函数地址改为自定义的函数地址（在此之前先保留正确的`SetTextColor`函数的地址，以便`notepad++.exe`进程结束时将`IAT`表中`SetTextColor`的函数地址恢复到正确）。
+
+#### C++实现
+
++ [代码](./ChangeNotepadPlusPlusTextColor)
+
+  + [dllmain.cpp](./ChangeNotepadPlusPlusTextColor/dllmain/dllmain.cpp)
+
+    ```c
+    
+    BOOL APIENTRY DllMain( HMODULE hModule,
+                           DWORD  ul_reason_for_call,
+                           LPVOID lpReserved
+    					 )
+    {
+    	switch (ul_reason_for_call)
+    	{
+    	case DLL_PROCESS_ATTACH:
+    
+    		IATHook(
+    			GetModuleHandleW(NULL),  //获取当前exe程序基址：If this parameter is NULL, GetModuleHandle returns a handle to the file used to create the calling process (.exe file).
+    			(char*)"gdi32.dll",
+    			(char*)"SetTextColor",
+    			Fake_SetTextColor,
+    			&g_hHook_SetTextColor
+    		);
+    
+    		break;
+    	case DLL_PROCESS_DETACH:
+    
+    		UnIATHook(g_hHook_SetTextColor);
+    		break;
+    	}
+    	return TRUE;
+    }
+    ```
+
+  + [injectAllTheThings](./ChangeNotepadPlusPlusTextColor/injectAllTheThings/main.cpp)
+
++ 调用方式
+
+  >在`C:\Users\18810\source\repos\ChangeNotepadPlusPlusTextColor\x64\Debug\`[即`injectAllTheThings.exe`的所在路径]中打开`cmd`,执行以下命令，进行`dll`注入：
+  >`.\injectAllTheThings.exe -t  1 notepad++.exe C:\Users\18810\source\repos\ChangeNotepadPlusPlusTextColor\x64\Debug\dllmain.dll`
+
++ 效果图：
 
 ## 附录
 
@@ -157,7 +206,7 @@ DWORD GetSysColor(
 
     ​                                                                       
 
-### 附录2 `Dll`文件
+### 附录2 `Dll`动态库文件
 
 #### [DllMain函数](https://blog.csdn.net/tiandao2009/article/details/79839182)
 
@@ -173,7 +222,8 @@ DWORD GetSysColor(
 
 + 示 例：
 
-  ```c
+  ```c++
+  #include <windows.h>
   BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
   {
   	switch (ul_reason_for_call)
@@ -192,6 +242,14 @@ DWORD GetSysColor(
   ```
 
 + 使用方法：可以将我们的注入代码写在一个`dll`文件的DLL_PROCESS_ATTACH或者DLL_THREAD_ATTACH中，这样当该`dll`模块被新创建的线程加载到notepad++进程中时，被注入的代码就会执行。（创建一个远程线程的时候，会以`LoadLibraryW`为入口函数，该函数加载指定的`dll`文件。）
+
++ 生成`lib`文件：包含有`DllMain`函数的`cpp`文件在build的时候并不会生成`dll`或者`lib`等链接库文件，当其含有`导出函数`或者**项目-属性 - 链接器-常规-忽略导入库：是**，即可生成`lib`文件。
+
+  ![image-20210111105621394](images/image-20210111105621394.png)
+
++ 生成`dll`文件：**项目-属性-配置属性-常规-配置类型：动态库(`.dll`)**即可生成`dll`动态库文件。
+
+  ![image-20210111105839925](images/image-20210111105839925.png)
 
 ### 附录3 从PE文件理解何为IAT hook
 
@@ -246,7 +304,7 @@ PE文件格式：
 
 #### IAT hook 
 
-至此，IAT的概念算是清楚了，就是记录模块中函数在内存中地址（一般情况）的表。既然如此，当我们利用IAT实现攻击的时候，便可以通过改变IAT表所指向的函数A的函数地址到我们自定义的函数B来实现攻击。如此，便当一个程序调用函数A时，就会自动的调用函数B，不过，为了能够让对方不发现自己已经被攻击或不致使系统发生问题等原因，一般在执行完自定义的函数后，当程序结束时，再将IAT表中国函数的A对应的地址改为正确的地址。常常利用`dll`注入来实现`IAT HOOK`，举例如下：
+至此，IAT的概念算是清楚了，就是记录模块中函数在内存中地址（一般情况）的表。既然如此，当我们利用IAT实现攻击的时候，便可以通过将IAT表中函数A所指向的的函数地址改成我们自定义的函数B的函数地址，以此来实现攻击。如此，便当一个程序调用函数A时，就会自动的变成调用函数B，不过，为了能够让对方不发现自己已经被攻击或不致使系统发生问题等原因，一般在执行完自定义的函数后，当程序结束时，再将IAT表中函数的A对应的地址改为正确的地址。常常利用`dll`注入来实现`IAT HOOK`，举例如下：
 
 ```c
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
