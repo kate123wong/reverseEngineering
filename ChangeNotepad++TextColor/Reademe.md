@@ -80,7 +80,7 @@ DWORD GetSysColor(
 
 + 效果如下：
 
-+ ![image-20210112190216964](images/image-20210112190216964.png)
+  ![image-20210112190216964](images/image-20210112190216964.png)
 
 + 该过程中遇到如下错误：尝试使用`eb`写入寄存器值时出错。
 
@@ -106,10 +106,10 @@ DWORD GetSysColor(
 + `dll`相关知识：见附录2【 `Dll`动态库文件】。
 
 + `API HOOK` 和 `IAT HOOK` 的基本原理：见附录3【从`PE`文件理解何为`IAT hook`】。
-  + `API HOOK`:通过`api hook`，改变一个系统`api`的原有功能。基本的方法就是通过`hook`“接触”到需要修改的`api`函数入口点]改变它的地址指向新的自定义的函数。
+  + `API HOOK`:通过`api hook`，改变一个系统`api`的原有功能。基本的方法就是通过`hook`“接触”到需要修改的`api`函数入口点改变它的地址指向新的自定义的函数。
   + `IAT HOOK`: *IAT* 法就是通过修改 *IAT* 表中的函数地址而达到的 *API* 截获的方法。
 
-#### 基本思想
+#### 此实验基本实现思想
 
 + `dll`注入：`injectAllTheThings.exe` 接受参数，并根据参数执行，`.\injectAllTheThings.exe -t  1 notepad++.exe dllmain.dll`该命令的意思是创建一个线程，将该线程注入到`notepad++.exe`中，该线程加载`dllmain.dll`动态库,并在该线程attach/detach到进程的时候会自动执行一些自定义代码。
 + `IAThook` : 在`dllmain.dll`中的入口函数 `DllMain`中定义：当线程attach到notepad++.exe的时候改变`notepad++.exe`PE文件的`IAT`表，使得其中指向`SetTextColor`的函数地址变成自定义的函数地址（在此之前先保留正确的`SetTextColor`函数的地址，以便`notepad++.exe`进程结束时将`IAT`表中`SetTextColor`的函数地址恢复到正确地址）。
@@ -181,19 +181,19 @@ DWORD GetSysColor(
 
   + `Fake_SetTextColor`的地址：
 
-  <img src="images/image-20210112115519768.png" alt="image-20210112115519768"  />
+    <img src="images/image-20210112115519768.png" alt="image-20210112115519768"  />
 
   + `SetTextColor`的地址：
 
-  ![image-20210112131307936](images/image-20210112131307936.png)
+    ![image-20210112131307936](images/image-20210112131307936.png)
 
   + `IAT hook`之后`IAT`表中的`SetTextColor`的地址（也就是原`Fake_SetTextColor`的地址）：
 
-  ![image-20210112181102195](images/image-20210112181102195.png)
+    ![image-20210112181102195](images/image-20210112181102195.png)
 
   + `IAT hook`之后真正的`SetTextColor`的地址
 
-  ![image-20210112181122316](images/image-20210112181122316.png)
+    ![image-20210112181122316](images/image-20210112181122316.png)
 
 ## 附录
 
@@ -372,7 +372,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 + [https://github.com/tinysec/iathook](https://github.com/tinysec/iathook)
 + [https://github.com/fdiskyou/injectAllTheThings](https://github.com/fdiskyou/injectAllTheThings)
 + [https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-settextcolor](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-settextcolor)
-+ [https://blog.csdn.net/HK_5788/article/details/48166375](https://blog.csdn.net/HK_5788/article/details/48166375)
-+ [https://blog.csdn.net/HK_5788/article/details/48166375](https://blog.csdn.net/HK_5788/article/details/48166375)
++ [https://blog.csdn.net/HK_5788/article/details/48166375
 + [https://blog.csdn.net/tiandao2009/article/details/79839182](https://blog.csdn.net/tiandao2009/article/details/79839182)
 + [https://blog.csdn.net/a1875566250/article/details/11619637](https://blog.csdn.net/a1875566250/article/details/11619637)
