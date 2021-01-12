@@ -2,11 +2,11 @@
 
 ## 实验要求
 
-+ 选任何一款软件，基于以下两种技术进行软件行为的篡改
++ 选任何一款软件，基于以下两种技术进行软件行为的篡改：
 
-  + [x] 基于`windebug`进行
+  + [x] 基于`windebug`进行；
 
-  + [x] 基于`dll、API/iat hook`来改
+  + [x] 基于`dll、API/iat hook`来改。
 
 ## 实验过程
 
@@ -80,7 +80,7 @@ DWORD GetSysColor(
 
 + 效果如下：
 
-  ![image-20210107164457721](images/image-20210107164457721.png)
++ ![image-20210112190216964](images/image-20210112190216964.png)
 
 + 该过程中遇到如下错误：尝试使用`eb`写入寄存器值时出错。
 
@@ -111,8 +111,8 @@ DWORD GetSysColor(
 
 #### 基本思想
 
-+ `dll`注入：`injectAllTheThings.exe` 接受参数，并根据参数执行，该命令的意思是创建一个线程，将该线程注入到`notepad++.exe`中，该线程加载`dllmain.dll`动态库,并在该线程attach/detach到进程的时候执行一些自定义代码。
-+ `IAThook` : 在`dllmain.dll`中的入口函数 `DllMain`中定义线程attach到notepad++.exe的时候改变`notepad++.exe`PE文件的的`IAT`表中指向`SetTextColor`的函数地址改为自定义的函数地址（在此之前先保留正确的`SetTextColor`函数的地址，以便`notepad++.exe`进程结束时将`IAT`表中`SetTextColor`的函数地址恢复到正确）。
++ `dll`注入：`injectAllTheThings.exe` 接受参数，并根据参数执行，`.\injectAllTheThings.exe -t  1 notepad++.exe dllmain.dll`该命令的意思是创建一个线程，将该线程注入到`notepad++.exe`中，该线程加载`dllmain.dll`动态库,并在该线程attach/detach到进程的时候会自动执行一些自定义代码。
++ `IAThook` : 在`dllmain.dll`中的入口函数 `DllMain`中定义：当线程attach到notepad++.exe的时候改变`notepad++.exe`PE文件的`IAT`表，使得其中指向`SetTextColor`的函数地址变成自定义的函数地址（在此之前先保留正确的`SetTextColor`函数的地址，以便`notepad++.exe`进程结束时将`IAT`表中`SetTextColor`的函数地址恢复到正确地址）。
 
 #### C++实现
 
@@ -131,10 +131,14 @@ DWORD GetSysColor(
     	{
     	case DLL_PROCESS_ATTACH:
     
+    		CHAR szInfo[MAX_PATH + 100];
+    		wsprintfA(szInfo, "Fake_SetTextColor地址为  (%p)", &Fake_SetTextColor);
+    		MessageBoxA(NULL, szInfo, "2021-01-12", 0);
+    
     		IATHook(
     			GetModuleHandleW(NULL),  //获取当前exe程序基址：If this parameter is NULL, GetModuleHandle returns a handle to the file used to create the calling process (.exe file).
-    			(char*)"gdi32.dll",
-    			(char*)"SetTextColor",
+    			(char*)"GDI32.dll",
+    			(char*)"SetTextColor", 
     			Fake_SetTextColor,
     			&g_hHook_SetTextColor
     		);
@@ -143,6 +147,8 @@ DWORD GetSysColor(
     	case DLL_PROCESS_DETACH:
     
     		UnIATHook(g_hHook_SetTextColor);
+    
+    		MessageBox(NULL, L"Process detach!", L"Inject All The Things!", 0);
     		break;
     	}
     	return TRUE;
@@ -153,14 +159,14 @@ DWORD GetSysColor(
 
 + 调用方式
 
-  >在`C:\Users\18810\source\repos\ChangeNotepadPlusPlusTextColor\x64\Debug\`[即`injectAllTheThings.exe`的所在路径]中打开`cmd`,执行以下命令，进行`dll`注入：
+  >打开`notepad++.exe`,在`C:\Users\18810\source\repos\ChangeNotepadPlusPlusTextColor\x64\Debug\`[即`injectAllTheThings.exe`的所在路径]中打开`cmd`,执行以下命令，进行`dll`注入：
   >`.\injectAllTheThings.exe -t  1 notepad++.exe C:\Users\18810\source\repos\ChangeNotepadPlusPlusTextColor\x64\Debug\dllmain.dll`
 
 + 实验效果1（直观观察）：
 
-  + 开启notepad++.exe,使用`WinDbg`下检测软件行为，使之暂停，然后调用`injectAllTheThings.exe`进行注入，在`WinDbg`中写入`g`命令使`notepad++.exe`软件继续执行。可以观察到加载了上述所生成的`dllmain.dll`文件，并弹出了一个`IAT hooking`的弹框（这算因为为方便观察现象，在`dllmain.dll`文件中调用了`MessageBox`函数来生成弹窗）。
+  + 开启notepad++.exe,使用`WinDbg`检测软件行为，点击`Break`使进程之暂停，然后调用`injectAllTheThings.exe`进行注入，在`WinDbg`中写入`g`命令使`notepad++.exe`软件继续执行。可以观察到加载了上述所生成的`dllmain.dll`文件，并弹出了一个`IAT hooking`的弹框（这算因为为方便观察现象，在`dllmain.dll`文件中调用了`MessageBox`函数来生成弹窗）。
 
-    ![image-20210111192148575](images/image-20210111192148575.png)
+    ![](images/Inkedimage-20210111192148575_LI.jpg)
   
     ![image-20210112181908888](images/image-20210112181908888.png)
   
@@ -195,7 +201,7 @@ DWORD GetSysColor(
 
 #### 基础命令
 
-+ `lm` :查看所有的模块，以及模块信息。
++ `lm` :查看进程所加载的所有的模块，以及各模块的具体信息（通过点击模块名进行跳转）。
 
   如图 : 
 
@@ -272,13 +278,13 @@ DWORD GetSysColor(
   }
   ```
 
-+ 使用方法：可以将我们的注入代码写在一个`dll`文件的DLL_PROCESS_ATTACH或者DLL_THREAD_ATTACH中，这样当该`dll`模块被新创建的线程加载到notepad++进程中时，被注入的代码就会执行。（创建一个远程线程的时候，会以`LoadLibraryW`为入口函数，该函数加载指定的`dll`文件。）
++ 使用方法：可以将我们的注入代码写在一个`dll`文件的DLL_PROCESS_ATTACH中，这样当该`dll`模块被新创建的线程加载到notepad++进程中时，被注入的代码就会执行。（创建一个远程线程的时候，会以`LoadLibraryW`为入口函数，该函数加载指定的`dll`文件。）
 
 + 生成`lib`文件：包含有`DllMain`函数的`cpp`文件在build的时候并不会生成`dll`或者`lib`等链接库文件，当其含有`导出函数`或者**项目-属性 - 链接器-常规-忽略导入库：是**，即可生成`lib`文件。
 
   ![image-20210111105621394](images/image-20210111105621394.png)
 
-+ 生成`dll`文件：**项目-属性-配置属性-常规-配置类型：动态库(.dll)**即可生成`dll`动态库文件。
++ 生成`dll`文件  **项目-属性-配置属性-常规-配置类型：动态库**即可生成`dll`动态库文件。
 
   ![image-20210111105839925](images/image-20210111105839925.png)
 
@@ -292,7 +298,7 @@ PE文件格式：
 
 #### [**DOS头** ](https://blog.csdn.net/HK_5788/article/details/48166375)
 
-+ 每个PE文件(`exe`文件或者`dll`文件)是以一个DOS程序开始的，有了它，一旦程序在DOS操作系统下执行，DOS才能识别出这是有效的执行体。
++ 每个PE文件(`exe`文件或者`dll`文件)是以一个DOS头开始的，有了它，一旦程序在DOS操作系统下执行，DOS才能识别出这是有效的执行体。
 
 + PE文件的第一个字节起始于一个传统的MS-DOS头部，被称作为IMAGE_DOS_HEADER。
 
@@ -329,13 +335,13 @@ PE文件格式：
 
 + 块表之后便是块(`Section`)。有`.data`,`.edata`等块。前者包含导入模块的信息，后者包含导出模块的信息。
 
-  + 以`.data`为例，如下图，其中的Name指向模块的名字，最前面的`Original_First_Thunk`指向`HNT/INT`表，最后的`FirstThunk`指向IAT表。从图可以清楚的看到，HNT表和IAT表都指向内存中模块中所包含的函数的地址。
+  + 以`.data`为例，如下图，其中的Name指向模块的名字，最前面的`Original_First_Thunk`指向`HNT/INT`表，最后的`FirstThunk`指向IAT表。从图可以清楚的看到，HNT表和IAT表都指向模块所包含的函数在内存中的地址。
 
 ![image-20210110164039152](images/image-20210110164039152.png)
 
-#### IAT hook 
+#### IAT hook  
 
-至此，`IAT`的概念算是清楚了，就是记录模块中函数在内存中地址（一般情况）的表。既然如此，当我们利用IAT实现攻击的时候，便可以通过将`IAT`表中函数A所指向的的函数地址改成我们自定义的函数B的函数地址，以此来实现攻击。如此，便当一个程序调用函数A时，就会自动的变成调用函数B，不过，为了能够让对方不发现自己已经被攻击或不致使系统发生问题等原因，一般在执行完自定义的函数后，当程序结束时，再将`IAT`表中函数的A对应的地址改为正确的地址。常常利用`dll`注入来实现`IAT HOOK`，举例如下：
+至此，`IAT`的概念算是清楚了，就是记录模块中函数在内存中地址（这是其中一种情况）的表。既然如此，当我们利用IAT实现攻击的时候，便可以通过将程序C的`IAT`表中函数A所指向的的函数地址改成我们自定义的函数B的函数地址，以此来实现攻击。如此，当程序C调用函数A时，就会变成自动地调用函数B，不过，为了能够让对方不发现自己已经被攻击或不致使系统发生问题等原因，一般在执行完自定义的函数后，当程序结束时，再将`IAT`表中函数的A对应的地址改为正确的地址。常常利用`dll`注入来实现`IAT HOOK`，举例如下：
 
 ```c
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -347,7 +353,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
            	g_pOrgFunc = GetProcAddress(GetModuleHandle(L"user32.dll"), "SetWindowTextW");
 
             // # hook
-        	// MySetWindowTextW并未定义成导出函数
 			hook_iat("user32.dll", g_pOrgFunc, (PROC)MySetWindowTextW);
 			break;
 
