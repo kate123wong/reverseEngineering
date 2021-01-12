@@ -73,7 +73,7 @@ DWORD GetSysColor(
   bp gdi32!SetTextColor  "r rdx = DC143C;g"  
   # 在x64框架下，rdx存放函数的第二个参数。
   # MASM 表达式中：
-  # bp 是对于后面的模块里面的gdi32函数SetTextColor下断点；
+  # bp 是对于后面的模块gdi32里面的函数SetTextColor下断点；
   # r 命令表示对寄存器的操作；
   # g 是go，即继续执行。 
   ```
@@ -89,7 +89,7 @@ DWORD GetSysColor(
   + `mov qword ptr [rsp+8],rbx` : 该命令的意思是将寄存器`rbx`里面的值写入`rsp+8`。（其原因是：[在 Win64 下，会为每个参数保留一份用来传递的 stack 空间，以便**回写** caller 的 stack](https://blog.csdn.net/a1875566250/article/details/11619637)）
   + 最后采用`r`指令代替`eb`指令。
 
-### 第三步： 基于`dll`、`IAT hook`实现篡改notepad++字体颜色的实验
+### 第三步： 基于`dll`、`IAT hook`实现篡改`notepad++`字体颜色的实验
 
 #### 参考资料
 
@@ -105,9 +105,9 @@ DWORD GetSysColor(
 
 + `dll`相关知识：见附录2【 `Dll`动态库文件】。
 
-+ API HOOK 和 IAT HOOK 的基本原理：见附录3【从PE文件理解何为IAT hook】。
-  + API HOOK:通过`api hook`，改变一个系统`api`的原有功能。基本的方法就是通过`hook`“接触”到需要修改的`api`函数[入口点](https://baike.baidu.com/item/入口点)，改变它的地址指向新的自定义的函数。
-  + IAT HOOK: *IAT* 法就是通过修改 *IAT* 表中的函数地址而达到的 *API* 截获的方法。
++ `API HOOK` 和 `IAT HOOK` 的基本原理：见附录3【从`PE`文件理解何为`IAT hook`】。
+  + `API HOOK`:通过`api hook`，改变一个系统`api`的原有功能。基本的方法就是通过`hook`“接触”到需要修改的`api`函数入口点]改变它的地址指向新的自定义的函数。
+  + `IAT HOOK`: *IAT* 法就是通过修改 *IAT* 表中的函数地址而达到的 *API* 截获的方法。
 
 #### 基本思想
 
@@ -156,13 +156,38 @@ DWORD GetSysColor(
   >在`C:\Users\18810\source\repos\ChangeNotepadPlusPlusTextColor\x64\Debug\`[即`injectAllTheThings.exe`的所在路径]中打开`cmd`,执行以下命令，进行`dll`注入：
   >`.\injectAllTheThings.exe -t  1 notepad++.exe C:\Users\18810\source\repos\ChangeNotepadPlusPlusTextColor\x64\Debug\dllmain.dll`
 
-+ 实验效果：
++ 实验效果1（直观观察）：
 
-  + 开启notepad++.exe,使用`WinDbg`下检测软件行为，使之暂停，然后调用`injectAllTheThings.exe`进行注入，在`WinDbg`中写入`g`命令使`notepad++.exe`软件继续执行。可以观察到加载了上述所生成的`dllmain.dll`文件，并弹出了一个`IAT hooking`的弹框（这算因为为方便观察现象，在`dllmain.dll`文件中调用了`MessageBoxA`函数来生成弹窗）。
+  + 开启notepad++.exe,使用`WinDbg`下检测软件行为，使之暂停，然后调用`injectAllTheThings.exe`进行注入，在`WinDbg`中写入`g`命令使`notepad++.exe`软件继续执行。可以观察到加载了上述所生成的`dllmain.dll`文件，并弹出了一个`IAT hooking`的弹框（这算因为为方便观察现象，在`dllmain.dll`文件中调用了`MessageBox`函数来生成弹窗）。
 
     ![image-20210111192148575](images/image-20210111192148575.png)
-
   
+    ![image-20210112181908888](images/image-20210112181908888.png)
+  
+
++ 实验效果2（用`MessageBoxA`来打印中间`IAT hook`时的中间变量等）
+
+  ```c++
+  CHAR szInfo[MAX_PATH + 100];
+  wsprintfA(szInfo, "Fake_SetTextColor地址为  (%p)", &Fake_SetTextColor);
+  MessageBoxA(NULL, szInfo, "2021-01-12", 0);
+  ```
+
+  + `Fake_SetTextColor`的地址：
+
+  <img src="images/image-20210112115519768.png" alt="image-20210112115519768"  />
+
+  + `SetTextColor`的地址：
+
+  ![image-20210112131307936](images/image-20210112131307936.png)
+
+  + `IAT hook`之后`IAT`表中的`SetTextColor`的地址（也就是原`Fake_SetTextColor`的地址）：
+
+  ![image-20210112181102195](images/image-20210112181102195.png)
+
+  + `IAT hook`之后真正的`SetTextColor`的地址
+
+  ![image-20210112181122316](images/image-20210112181122316.png)
 
 ## 附录
 
@@ -253,7 +278,7 @@ DWORD GetSysColor(
 
   ![image-20210111105621394](images/image-20210111105621394.png)
 
-+ 生成`dll`文件：**项目-属性-配置属性-常规-配置类型：动态库(`.dll`)**即可生成`dll`动态库文件。
++ 生成`dll`文件：**项目-属性-配置属性-常规-配置类型：动态库(.dll)**即可生成`dll`动态库文件。
 
   ![image-20210111105839925](images/image-20210111105839925.png)
 
@@ -300,17 +325,17 @@ PE文件格式：
 
 #### IAT表
 
-+ PE文件头之后便是块表（Section Table），块表中指明了块名（Name）、块在内存中的地址、块的大小等信息。
++ `PE`文件头之后便是块表（`Section Table`），块表中指明了块名（`Name`）、块在内存中的地址、块的大小等信息。
 
-+ 块表之后便是块(Section)。有`.data`,`.edata`等块。前者包含导入模块的信息，后者包含导出模块的信息。
++ 块表之后便是块(`Section`)。有`.data`,`.edata`等块。前者包含导入模块的信息，后者包含导出模块的信息。
 
-+ 以`.data`为例，如下图，其中的Name指向模块的名字，最前面的`Original_First_Thunk`指向HNT/INT表，最后的`FirstThunk`指向IAT表。从图可以清楚的看到，HNT表和IAT表都指向内存中模块中所包含的函数的地址。
+  + 以`.data`为例，如下图，其中的Name指向模块的名字，最前面的`Original_First_Thunk`指向`HNT/INT`表，最后的`FirstThunk`指向IAT表。从图可以清楚的看到，HNT表和IAT表都指向内存中模块中所包含的函数的地址。
 
 ![image-20210110164039152](images/image-20210110164039152.png)
 
 #### IAT hook 
 
-至此，IAT的概念算是清楚了，就是记录模块中函数在内存中地址（一般情况）的表。既然如此，当我们利用IAT实现攻击的时候，便可以通过将IAT表中函数A所指向的的函数地址改成我们自定义的函数B的函数地址，以此来实现攻击。如此，便当一个程序调用函数A时，就会自动的变成调用函数B，不过，为了能够让对方不发现自己已经被攻击或不致使系统发生问题等原因，一般在执行完自定义的函数后，当程序结束时，再将IAT表中函数的A对应的地址改为正确的地址。常常利用`dll`注入来实现`IAT HOOK`，举例如下：
+至此，`IAT`的概念算是清楚了，就是记录模块中函数在内存中地址（一般情况）的表。既然如此，当我们利用IAT实现攻击的时候，便可以通过将`IAT`表中函数A所指向的的函数地址改成我们自定义的函数B的函数地址，以此来实现攻击。如此，便当一个程序调用函数A时，就会自动的变成调用函数B，不过，为了能够让对方不发现自己已经被攻击或不致使系统发生问题等原因，一般在执行完自定义的函数后，当程序结束时，再将`IAT`表中函数的A对应的地址改为正确的地址。常常利用`dll`注入来实现`IAT HOOK`，举例如下：
 
 ```c
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
@@ -337,4 +362,12 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
 ## 参考文献
 
-注：已在文中所用到的地方以链接方式给出。
++ [范老师讲义](NULL)
+
++ [https://github.com/tinysec/iathook](https://github.com/tinysec/iathook)
++ [https://github.com/fdiskyou/injectAllTheThings](https://github.com/fdiskyou/injectAllTheThings)
++ [https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-settextcolor](https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-settextcolor)
++ [https://blog.csdn.net/HK_5788/article/details/48166375](https://blog.csdn.net/HK_5788/article/details/48166375)
++ [https://blog.csdn.net/HK_5788/article/details/48166375](https://blog.csdn.net/HK_5788/article/details/48166375)
++ [https://blog.csdn.net/tiandao2009/article/details/79839182](https://blog.csdn.net/tiandao2009/article/details/79839182)
++ [https://blog.csdn.net/a1875566250/article/details/11619637](https://blog.csdn.net/a1875566250/article/details/11619637)
